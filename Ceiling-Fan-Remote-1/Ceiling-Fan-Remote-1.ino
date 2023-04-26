@@ -79,8 +79,13 @@ void sendBit(int bit) {
     digitalWrite(DIO2, 0);
     delayMicroseconds(SHORT_DELAY);
   } else {
+    // We allow interrupts during stop bits.
+    // This may make the stop bit a little longer,
+    // but the timing of stop bits isn't critical.
+    interrupts();
     digitalWrite(DIO2, 0);
     delayMicroseconds(LONG_DELAY + SHORT_DELAY);
+    noInterrupts();
   }
 }
 
@@ -263,14 +268,17 @@ void setup() {
   RFM69writeReg(REG_OSC1, RF_OSC1_RCCAL_START);
   while ((RFM69readReg(REG_OSC1) & RF_OSC1_RCCAL_DONE) == 0x00);
   RFM69setModeTX();
+  noInterrupts();
 }
 
 void sleepUntilButton() {
   RFM69setModeSleep();
   enableInterruptMode();
+  interrupts();
   digitalWrite(LED_BUILTIN, LOW);
   LowPower.sleep();
   digitalWrite(LED_BUILTIN, HIGH);
+  noInterrupts();
   enableButtonMode();
   RFM69setModeTX();
 }
